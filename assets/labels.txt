@@ -1,3 +1,2 @@
-1 Not Bus
-0 Bus
-
+Bus
+Not a Bus

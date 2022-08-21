@@ -13,8 +13,8 @@ class ViewBusCitations extends StatefulWidget {
 
 class _ViewBusCitationsState extends State<ViewBusCitations> {
   late GoogleMapController mapController;
-  late LatLng _center = LatLng(32.524301, 35.841887); //initial center
-  Set<Marker> _markers = Set();
+  late final LatLng _center = const LatLng(32.524301, 35.841887); //initial center
+  final Set<Marker> _markers = {};
   List<TrackedBus> trackedbusses = [];
   bool loaded = false;
 
@@ -84,7 +84,6 @@ class _ViewBusCitationsState extends State<ViewBusCitations> {
 
   @override
   void initState() {
-    // TODO: implement initState
     getBusses();
     setMarkers();
     super.initState();
@@ -114,14 +113,14 @@ class _ViewBusCitationsState extends State<ViewBusCitations> {
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text(
+                const Text(
                   "Select Track :",
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 20,
                   ),
                 ),
-                SizedBox(
+                const SizedBox(
                   width: 10,
                 ),
                 DropdownButton(
@@ -131,7 +130,7 @@ class _ViewBusCitationsState extends State<ViewBusCitations> {
                       value: items,
                       child: Text(
                         items,
-                        style: TextStyle(
+                        style: const TextStyle(
                             fontSize: 20, fontWeight: FontWeight.bold),
                       ),
                     );

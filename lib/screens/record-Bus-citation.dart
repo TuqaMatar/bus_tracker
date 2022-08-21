@@ -1,20 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_storage/firebase_storage.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:path/path.dart' as path;
-import 'package:tflite/tflite.dart';
 import 'dart:io';
 import 'package:image_picker/image_picker.dart';
 import 'package:bus_tracker/models/tracked-bus-model.dart';
+
 class RecordBus extends StatefulWidget {
-  const RecordBus({Key? key, required this.title}) : super(key: key);
+ RecordBus({Key? key, required this.title  ,required this.image}) : super(key: key);
   final String title;
+  File? image;
 
   @override
   State<RecordBus> createState() => _RecordBusState();
@@ -25,11 +23,13 @@ class _RecordBusState extends State<RecordBus> {
   FirebaseFirestore firebaseFirestore = FirebaseFirestore.instance;
   String? imageUrl;
   File? _image;
+
+
   final imagePicker = ImagePicker();
-  String Address ='search';
+  String address ='search';
   // Initial Selected Value for drop down
   String dropdownvalue = 'Track 1';
-  GeoPoint location = GeoPoint(34, 35);
+  GeoPoint location = const GeoPoint(34, 35);
   // List of items in our dropdown menu
   var items = [
     'Track 1',
@@ -75,14 +75,13 @@ class _RecordBusState extends State<RecordBus> {
     List<Placemark> placemarks = await placemarkFromCoordinates(position.latitude, position.longitude);
     //print(placemarks);
     Placemark place = placemarks[0];
-    Address = '${place.street}, ${place.subLocality}, ${place.locality}, ${place.postalCode}, ${place.country}';
+    address = '${place.street}, ${place.subLocality}, ${place.locality}, ${place.postalCode}, ${place.country}';
 
   }
   //Get Image From Camera
   Future getImage() async {
-    final picker = ImagePicker();
     try {
-      final image = await picker.pickImage(source: ImageSource.camera);
+      final image = widget.image;
       final String fileName = path.basename(image!.path);
       File imageFile = File(image.path);
 
@@ -118,7 +117,6 @@ class _RecordBusState extends State<RecordBus> {
 
   Future addNewBus(String imageUrl, String type, [GeoPoint? location]) async {
     TrackedBus trackedBus = TrackedBus();
-
     //writing all the values
     trackedBus.imageUrl = imageUrl;
     trackedBus.type = type;
@@ -156,6 +154,12 @@ class _RecordBusState extends State<RecordBus> {
     return  GeoPoint(position.latitude,position.longitude) ;
   }
 
+
+@override 
+void initState() {
+    _image = widget.image;
+    super.initState();
+  }
   @override
   Widget build(BuildContext context) {
     Size size = MediaQuery.of(context).size;
@@ -170,7 +174,20 @@ class _RecordBusState extends State<RecordBus> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
-              Row(
+            
+              SizedBox(
+                height: 50,
+              ),
+              Container(
+                  child: _image == null
+                      ? Text("No Image Selected")
+                      : Image.file(_image!,
+                      width: size.width, height: size.height * 0.4)),
+              SizedBox(
+                height: 50,
+              ),
+
+                Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text("Select Track :"),
@@ -196,77 +213,10 @@ class _RecordBusState extends State<RecordBus> {
               SizedBox(
                 height: 50,
               ),
-              Container(
-                  child: _image == null
-                      ? Text("No Image Selected")
-                      : Image.file(_image!,
-                      width: size.width, height: size.height * 0.4)),
-              SizedBox(
-                height: 20,
-              ),
-              Container(
-                  padding: EdgeInsets.all(10),
-                  child: ElevatedButton.icon(
-                      onPressed: () {
-                        showDialog(
-                            context: context,
-                            builder: (BuildContext context) {
-                              return AlertDialog(
-                                title: Text("choose option"),
-                                content: SingleChildScrollView(
-                                  child: ListBody(
-                                    children: [
-                                      InkWell(
-                                        onTap: getImage,
-                                        splashColor: Colors.blue,
-                                        child: Row(children: [
-                                          Padding(
-                                            padding: const EdgeInsets.all(10),
-                                            child: Icon(
-                                              Icons.camera_alt,
-                                              color: Colors.blue,
-                                            ),
-                                          ),
-                                          Text(
-                                            "Camera",
-                                            style: TextStyle(
-                                                fontWeight: FontWeight.bold),
-                                          )
-                                        ]),
-                                      ),
-                                      InkWell(
-                                        onTap: () {
-                                          setState(() {
-                                            _image = null;
-                                          });
-                                          _image = null;
-                                        },
-                                        splashColor: Colors.blue,
-                                        child: Row(children: [
-                                          Padding(
-                                            padding: const EdgeInsets.all(10),
-                                            child: Icon(
-                                              Icons.delete,
-                                              color: Colors.red,
-                                            ),
-                                          ),
-                                          Text(
-                                            "Remove",
-                                            style: TextStyle(
-                                                fontWeight: FontWeight.bold),
-                                          )
-                                        ]),
-                                      )
-                                    ],
-                                  ),
-                                ),
-                              );
-                            });
-                      },
-                      icon: Icon(Icons.download_rounded),
-                      label: Text("Upload Bus Image"))),
+
               ElevatedButton(
                   onPressed: () async{
+                    getImage();
                     print("imageUrl ${imageUrl}");
                     print("type ${dropdownvalue}");
                      GeoPoint locationtest = await getDeviceLatLn() ;
@@ -274,6 +224,8 @@ class _RecordBusState extends State<RecordBus> {
 
                     location = await getDeviceLatLn();
                     addNewBus(imageUrl!, dropdownvalue, location);
+                    Navigator.pushNamed(context, '/home');
+                    
                   },
                   style: ElevatedButton.styleFrom(primary: Colors.green),
                   child: Text("Submit"))
